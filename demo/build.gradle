@@ -27,6 +27,10 @@ dependencies {
 	implementation 'org.glassfish.web:jakarta.servlet.jsp.jstl' //스프링부트 3.0 이상
 	implementation 'org.apache.tomcat.embed:tomcat-embed-jasper' //스프링부트에 내장된 tomcat은 jsp 엔진을 포함하고 있지않아 의존성 추가
     compileOnly 'javax.servlet:javax.servlet-api:4.0.1'
+	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+	implementation 'org.springframework.boot:spring-boot-starter'
+	runtimeOnly 'com.mysql:mysql-connector-j'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
 tasks.named('test') {
