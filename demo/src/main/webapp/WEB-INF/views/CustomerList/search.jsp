@@ -1,48 +1,76 @@
-<!-- 1.Designating a Java library -->
-<%@ page import="java.io.*" %>
+<%@ page import = "java.util.*" %>
+<%@ page import = "java.sql.*" %>
+<%@ page import = "java.io.*" %>
 <%@ page import="com.nexacro.java.xapi.data.*" %>
 <%@ page import="com.nexacro.java.xapi.tx.*" %>
 
-<!-- 2. Defining a MIME type -->
-<%@ page contentType="text/xml; charset=UTF-8" %>
+<%@ page contentType="text/xml; charset=utf-8" %>
+
 <%
-/** 3. Creating a basic object of Nexacro **/
+/****** Service API initialization ******/
 PlatformData pdata = new PlatformData();
 
-/** 5.1 Processing ErrorCode and ErrorMsg **/
 int nErrorCode = 0;
 String strErrorMsg = "START";
 
+/******* JDBC Connection *******/
+Connection conn = null;
+Statement  stmt = null;
+ResultSet  rs   = null;
+Class.forName("com.mysql.cj.jdbc.Driver");
+conn = DriverManager.getConnection("jdbc:mysql://localhost:1433/Sample","root","1234");
+stmt = conn.createStatement();
+
 try {
-    /** 4. Processing data : Loading data from the file: loading data from the file **/
-    /** 4.1 Loading data from the file **/
-    String sourceFilename = "./saveFile.bin";
-    InputStream source = new FileInputStream(sourceFilename);
+    /******* SQL query *************/
+    String SQL = "select * from sample_customers_list";
+    rs = stmt.executeQuery(SQL);
 
-    PlatformRequest req = new PlatformRequest(source, 
-        PlatformType.CONTENT_TYPE_BINARY);
-    req.receiveData();
-    source.close();
+    /********* Dataset Create ************/
+    DataSet ds = new DataSet("customers");
+    ds.addColumn("id",DataTypes.STRING, 4);
+    ds.addColumn("name",DataTypes.STRING, 16);
+    ds.addColumn("email", DataTypes.STRING, 32);
+    ds.addColumn("phone", DataTypes.STRING, 16);
+    ds.addColumn("comp_name", DataTypes.STRING, 32);
+    ds.addColumn("department", DataTypes.STRING, 32);
+    ds.addColumn("comp_phone", DataTypes.STRING, 16);
+    ds.addColumn("comp_addr", DataTypes.STRING, 256);
+    int row = 0;
+    while(rs.next())
+    {
+        row = ds.newRow();
+        ds.set(row, "id", rs.getString("id"));    
+        ds.set(row, "name", rs.getString("name"));
+        ds.set(row, "email", rs.getString("email"));
+        ds.set(row, "phone", rs.getString("phone"));
+        ds.set(row, "comp_name", rs.getString("comp_name"));
+        ds.set(row, "department", rs.getString("department"));
+        ds.set(row, "comp_phone", rs.getString("comp_phone"));
+        ds.set(row, "comp_addr", rs.getString("comp_addr"));
+    }
 
-    /** 4.2 Copying the loaded data to the dataset **/
-    pdata = req.getData();
+    /********* Adding Dataset to PlatformData ************/
+    pdata.addDataSet(ds);
 
-    /** 5.2 Setting ErrorCode and ErrorMsg for success **/
     nErrorCode = 0;
     strErrorMsg = "SUCC";
-
-} catch (Throwable th) {
-    /** 5.3 Setting ErrorCode and ErrorMsg for failure **/
+}
+catch(SQLException e) {
     nErrorCode = -1;
-    strErrorMsg = th.getMessage();
+    strErrorMsg = e.getMessage();
 }
 
-/** 5.4 Saving ErrorCode and ErrorMsg to send them to the client **/
-VariableList varList = pdata.getVariableList();
+/******** JDBC Close *******/
+if ( stmt != null ) try { stmt.close(); } catch (Exception e) {}
+if ( conn != null ) try { conn.close(); } catch (Exception e) {}
+
+PlatformData senddata = new PlatformData();
+VariableList varList = senddata.getVariableList();
 varList.add("ErrorCode", nErrorCode);
 varList.add("ErrorMsg", strErrorMsg);
 
-/** 6. Sending result data to the client **/
+/******** XML data Create ******/
 HttpPlatformResponse res = new HttpPlatformResponse(response, 
     PlatformType.CONTENT_TYPE_XML,"UTF-8");
 res.setData(pdata);
