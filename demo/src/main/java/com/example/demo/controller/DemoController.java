@@ -1,11 +1,15 @@
 package com.example.demo.controller;
 
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
-//import org.springframework.web.bind.annotation.RequestMethod;
  
 @Controller
 public class DemoController {
+	
     @RequestMapping("/")
     public String home() {
         System.out.println("JSP 파일 반환만 되게 해주세요...");
